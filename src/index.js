@@ -3,31 +3,66 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 
-class Square extends React.Component {
+//Square
+//クラスコンポーネントVer
+// class Square extends React.Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       value: null,
+//     }
+
+//   }
+//   render() {
+
+//     return (
+//       <button className="square" onClick={() => { this.props.onClick();}}>
+//         {/* TODO */}
+//         {this.props.value}
+//       </button>
+//     );
+//   }
+// }
+
+
+
+
+
+//関数コンポーネントVer
+function Square(props) {
+  return (
+    <button className="square" onClick={props.onClick}>
+      {props.value}
+    </button>
+  );
+}
+
+
+//================================================================
+//================================================================
+
+
+class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: null,
-    }
-
-  }
-  render() {
-    const clickHundler = (o) => {
-      o.setState({ value: 'X' });
+      squares: Array(9).fill(null),
     };
 
-    return (
-      <button className="square" onClick={() => {clickHundler(this);}}>
-        {/* TODO */}
-        {this.state.value}
-      </button>
-    );
   }
-}
 
-class Board extends React.Component {
+  hundleClick(i) {
+    const squares = [...this.state.squares];
+    squares[i] = squares[i] === 'x' ? '〇' : 'x';
+    this.setState({ squares: squares });
+  }
+
   renderSquare(i) {
-    return <Square value={i} />;
+    return <
+      Square
+      value={this.state.squares[i]}
+      onClick={() => { this.hundleClick(i) }}
+    />;
   }
 
   render() {
