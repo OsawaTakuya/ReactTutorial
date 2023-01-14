@@ -1,34 +1,12 @@
-import { click } from '@testing-library/user-event/dist/click';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-
-//Square
-//クラスコンポーネントVer
-// class Square extends React.Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       value: null,
-//     }
-
-//   }
-//   render() {
-
-//     return (
-//       <button className="square" onClick={() => { this.props.onClick();}}>
-//         {/* TODO */}
-//         {this.props.value}
-//       </button>
-//     );
-//   }
-// }
+import SortButton from './SortButton';
 
 
 
 
 
-//関数コンポーネントVer
 function Square(props) {
   return (
     <button className="square" onClick={props.onClick}>
@@ -47,6 +25,7 @@ class Board extends React.Component {
   renderSquare(i) {
     return <
       Square
+      key={i}
       value={this.props.squares[i]}
       onClick={() => { this.props.onClick(i) }}
     />;
@@ -56,21 +35,19 @@ class Board extends React.Component {
   render() {
     return (
       <div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
+        {
+          Array(3).fill(0).map((v, i) => {
+            return (
+              <div className="board-row" key={i}>
+                {
+                  Array(3).fill(0).map((v, j) => {
+                    return this.renderSquare(i * 3 + j);
+                  })
+                }
+              </div>
+            )
+          })
+        }
       </div>
     );
   }
@@ -82,15 +59,25 @@ class Game extends React.Component {
     this.state = {
       history: [{
         squares: Array(9).fill(null),
+        place: 0,
       }],
       xIsNext: true,
       stepNumber: 0,
+      asc: true,
     }
+    this.setAscState = this.setAscState.bind(this);
   }
+
+  setAscState(b){
+    this.setState({
+      asc: b
+    });
+  }
+
+
 
   hundleClick(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    console.log(history)
     const current = history[history.length - 1];
     const squares = [...current.squares];
     if (calculateWinner(squares) || squares[i]) {
@@ -100,6 +87,7 @@ class Game extends React.Component {
     this.setState({
       history: history.concat([{
         squares: squares,
+        place: i,
       }]),
       stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
@@ -117,16 +105,24 @@ class Game extends React.Component {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
-    const moves = history.map((step, move) => {
+    let moves = history.map((step, move) => {
+      const col = Math.floor(step.place / 3) + 1;
+      const row = step.place % 3 + 1;
       const desc = move ?
-        `Go to move #${move}` : 'Go to game start';
+        `Go to move #${move} | player:${move % 2 === 1 ? 'x' : 'o'} put on (${col},${row})` : 'Go to game start';
+
       return (
-        <li>
-          <button key={move} onClick={() => { this.jumpTo(move) }}>{desc}</button>
+        <li key={move} >
+          <button className={this.state.stepNumber === move ? 'selected' : ''} onClick={() => { this.jumpTo(move) }}>{desc}</button>
         </li>
       );
 
+
     })
+
+
+    if (!this.state.asc) { moves = [...moves.reverse()] };
+
     let status;
     if (winner) {
       status = `Winner: ${winner}`;
@@ -135,17 +131,27 @@ class Game extends React.Component {
     }
 
     return (
+      <div>
 
-      <div className="game">
-        <div className="game-board">
-          <Board
-            squares={current.squares}
-            onClick={(i) => { this.hundleClick(i) }}
-          />
+        <div className='sort-button'>
+          <p>Sort game history</p>
+          <SortButton hundleSortClick={this.setAscState} />
         </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <ol>{moves}</ol>
+        <hr></hr>
+
+        <div className="game">
+          <div className="game-board">
+            <p>Selected at {this.state.stepNumber}</p>
+            <Board
+              squares={current.squares}
+              onClick={(i) => { this.hundleClick(i) }}
+            />
+          </div>
+          <div className="game-info">
+            <div>{status}</div>
+            <ol className="game-history">{moves}</ol>
+            {/* <ol className="game-history">{moves}</ol> */}
+          </div>
         </div>
       </div>
     );
@@ -176,3 +182,4 @@ function calculateWinner(squares) {
   }
   return null;
 }
+
